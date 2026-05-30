@@ -1,0 +1,6 @@
+{
+  "电视": [ "tv", "mi-tv", "xiaomi-tv" ],
+  "电脑": [ "desktop", "pc", "windows" ],
+  "手机": [ "iphone", "xiaomi", "android" ],
+  "ipad": [ "ipad" ]
+}
