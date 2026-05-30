@@ -1,0 +1,51 @@
+import hashlib
+import requests
+from config import ROUTER_IP, ROUTER_PASSWORD
+
+class XiaomiRouter:
+    def __init__(self):
+        self.stok = None
+
+    def login(self):
+        password_md5 = hashlib.md5(ROUTER_PASSWORD.encode()).hexdigest()
+        url = f"http://{ROUTER_IP}/cgi-bin/luci/api/xqsystem/login"
+        data = {
+            "username": "admin",
+            "password": password_md5,
+            "logtype": 2,
+            "nonce": "0_0_0_0"
+        }
+        response = requests.post(url, data=data)
+        result = response.json()
+        print("登录返回：", result)
+        self.stok = result.get("token")
+        if not self.stok:
+            raise Exception("登录失败，未获取到token")
+        return self.stok
+
+    def get_device_list(self):
+        url = f"http://{ROUTER_IP}/cgi-bin/luci;stok={self.stok}/api/misystem/devicelist"
+        response = requests.get(url)
+        result = response.json()
+        devices = result.get("list", [])
+        return devices
+
+    def print_devices(self, devices):
+        print("\n当前在线设备:\n")
+        for index, device in enumerate(devices, start=1):
+            print(f"[{index}]")
+            print(f"名称: {device.get('name')}")
+            print(f"IP: {device.get('ip')}")
+            print(f"MAC: {device.get('mac')}")
+            print("*" * 30)
+
+    def set_qos(self, mac, limit_mbps):
+        # 注意：下面这个API是文档示例，很可能你的路由器不同，需要自己抓包替换！
+        url = f"http://{ROUTER_IP}/cgi-bin/luci;stok={self.stok}/api/xqnetwork/qos"
+        data = {
+            "mac": mac,
+            "download": limit_mbps * 1024
+        }
+        print("\n发送限速请求：", data)
+        response = requests.post(url, data=data)
+        print("\n接口返回：", response.text)
